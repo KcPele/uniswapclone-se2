@@ -18,6 +18,12 @@
       "~~/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "components/PoolAdd/PoolAdd.jsx"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "components/PoolAdd/PoolAdd.jsx",
+    "components/HeroSection/HeroSection.jsx"
+  ],
   "exclude": ["node_modules"]
 }

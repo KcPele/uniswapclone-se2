@@ -13,7 +13,7 @@ const PoolConnect = ({ setClosePool }: IPoolConnect) => {
 
   console.log(getAllLiquidity);
 
-  let tokenList = [];
+  const tokenList = [];
   for (let i = 0; i < getAllLiquidity.length; i++) {
     if (i % 2 == 1) tokenList.push(getAllLiquidity[i]);
   }
@@ -43,8 +43,8 @@ const PoolConnect = ({ setClosePool }: IPoolConnect) => {
               <p>Your Position {tokenList.length}</p>
             </div>
 
-            {tokenList.map((el, i) => (
-              <div className="border-2 border-primary rounded-md p-2">
+            {tokenList.map((el, index) => (
+              <div key={index} className="border-2 border-primary rounded-md p-2">
                 <div className="flex items-center justify-between">
                   <p>
                     <small className="bg-primary p-2 rounded-md">{el.poolExample.token0.name}</small>

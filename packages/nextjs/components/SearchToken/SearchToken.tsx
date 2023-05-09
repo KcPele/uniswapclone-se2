@@ -33,36 +33,11 @@ const SearchToken = ({ openToken, tokens, tokenData }: ISearchToken) => {
   //USESTATE
   const [active, setActive] = useState(1);
 
-  let tokenList = [];
+  const tokenList = [];
   for (let i = 0; i < tokenData.length; i++) {
     if (i % 2 == 1) tokenList.push(tokenData[i]);
   }
 
-  const coin = [
-    {
-      img: images.ether,
-      name: "Ethereum",
-      symbol: "ETH",
-    },
-    {
-      img: images.ether,
-      name: "Dia token",
-      symbol: "DAI",
-      tokenBalance: "032222223333333",
-    },
-    {
-      img: images.ether,
-      name: "Doge token",
-      symbol: "DOG",
-      tokenBalance: "032222223333333",
-    },
-    {
-      img: images.ether,
-      name: "Funny",
-      symbol: "FUN",
-      tokenBalance: "032222223333333",
-    },
-  ];
   return (
     <div className="p-4 absolute bg-white shadow-lg w-full sm:w-[30rem] h-[25rem] rounded-md">
       <div className="">
