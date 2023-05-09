@@ -20,7 +20,7 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
   */
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
-
+  console.log(deployer);
   await deploy("YourContract", {
     from: deployer,
     // Contract constructor arguments
@@ -30,6 +30,48 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
     // automatically mining the contract deployment transaction. There is no effect on live networks.
     autoMine: true,
   });
+
+  //swag token
+  await deploy("SwagToken", {
+    from: deployer,
+
+    args: [],
+    log: true,
+    autoMine: true,
+  });
+
+  //light token
+  await deploy("LightToken", {
+    from: deployer,
+
+    args: [],
+    log: true,
+    autoMine: true,
+  });
+  // SwapMultiHop
+  await deploy("SwapMultiHop", {
+    from: deployer,
+
+    args: [],
+    log: true,
+    autoMine: true,
+  });
+  //SingleSwapToken
+  await deploy("SingleSwapToken", {
+    from: deployer,
+
+    args: [],
+    log: true,
+    autoMine: true,
+  });
+  //LiquidityExamples
+  // await deploy("LiquidityExamples", {
+  //   from: deployer,
+
+  //   args: ["0xC36442b4a4522E871399CD717aBDD847Ab11FE88"],
+  //   log: true,
+  //   autoMine: true,
+  // });
 
   // Get the deployed contract
   // const yourContract = await hre.ethers.getContract("YourContract", deployer);
