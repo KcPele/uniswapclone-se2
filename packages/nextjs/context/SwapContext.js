@@ -1,16 +1,27 @@
 import React, { useEffect, useState } from "react";
+import { addLiquidityExternal } from "../utils/addLiquidity";
+import {
+  connectingWithDAIToken,
+  connectingWithIWTHToken,
+  connectingWithSingleSwapToken,
+  connectingWithUserStorageContract,
+} from "../utils/appFeatures";
+import { getLiquidityData } from "../utils/checkLiquidity";
+import { getPrice } from "../utils/fetchingPrice";
+import { swapUpdatePrice } from "../utils/swapUpdatePrice";
+import ERC20 from "./ERC20.json";
 import { BigNumber, ethers } from "ethers";
+import { useAccount, useProvider, useSigner } from "wagmi";
 
 export const SwapTokenContext = React.createContext();
 
 export const SwapTokenContextProvider = ({ children }) => {
+  const { address: account, isConnected } = useAccount();
+  const provider = useProvider();
+  const { data: signer } = useSigner();
   //USSTATE
-  const [account, setAccount] = useState("");
-  const [ether, setEther] = useState("");
-  const [networkConnect, setNetworkConnect] = useState("");
   const [weth9, setWeth9] = useState("");
   const [dai, setDai] = useState("");
-  const [provider, setProvider] = useState("");
 
   const [tokenData, setTokenData] = useState([]);
   const [getAllLiquidity, setGetAllLiquidity] = useState([]);
@@ -25,37 +36,18 @@ export const SwapTokenContextProvider = ({ children }) => {
     "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
     "0x6B175474E89094C44Da98b954EedeAC495271d0F",
     "0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",
-    "0xe044814c9eD1e6442Af956a817c161192cBaE98F",
-    "0xaB837301d12cDc4b97f1E910FC56C9179894d9cf",
-    "0x4ff1f64683785E0460c24A4EF78D582C2488704f",
   ];
 
   //FETCH DATA
   const fetchingData = async () => {
+    if (!account) return;
     try {
-      //GET USER ACCOUNT
-      const userAccount = await checkIfWalletConnected();
-      setAccount(userAccount);
-      //CREATE PROVIDER
-      const web3modal = new Web3Modal();
-      const connection = await web3modal.connect();
-      const provider = new ethers.providers.Web3Provider(connection);
-      //CHECK Balance
-      const balance = await provider.getBalance(userAccount);
-      const convertBal = BigNumber.from(balance).toString();
-      const ethValue = ethers.utils.formatEther(convertBal);
-      setEther(ethValue);
-
-      //GET NETWORK
-      const newtork = await provider.getNetwork();
-      setNetworkConnect(newtork.name);
-
       //ALL TOKEN BALANCE AND DATA
       addToken.map(async (el, i) => {
         //GETTING CONTRACT
         const contract = new ethers.Contract(el, ERC20, provider);
         //GETTING BALANCE OF TOKEN
-        const userBalance = await contract.balanceOf(userAccount);
+        const userBalance = await contract.balanceOf(account);
         const tokenLeft = BigNumber.from(userBalance).toString();
         const convertTokenBal = ethers.utils.formatEther(tokenLeft);
         //GET NAME AND SYMBOL
@@ -63,6 +55,10 @@ export const SwapTokenContextProvider = ({ children }) => {
         const symbol = await contract.symbol();
         const name = await contract.name();
 
+        //prevent duplicate
+        const check = tokenData.find(val => val.tokenAddress === el);
+
+        if (check) return;
         tokenData.push({
           name: name,
           symbol: symbol,
@@ -71,7 +67,7 @@ export const SwapTokenContextProvider = ({ children }) => {
         });
       });
 
-      // //GET LIQUDITY
+      // //GET LIQUDITy
       // const userStorageData = await connectingWithUserStorageContract();
       // const userLiquidity = await userStorageData.getAllTransactions();
       // console.log(userLiquidity);
@@ -109,17 +105,17 @@ export const SwapTokenContextProvider = ({ children }) => {
       }
       `;
 
-      const axiosData = await axios.post(URL, { query: query });
-      console.log(axiosData.data.data.tokens);
-      setTopTokensList(axiosData.data.data.tokens);
+      // const axiosData = await axios.post(URL, { query: query });
+      // console.log(axiosData.data.data.tokens);
+      // setTopTokensList(axiosData.data.data.tokens);
     } catch (error) {
       console.log(error);
     }
   };
 
-  // useEffect(() => {
-  //   fetchingData();
-  // }, [account]);
+  useEffect(() => {
+    fetchingData();
+  }, [account, isConnected]);
 
   //CREATE AND ADD LIQUIDITY
   const createLiquidityAndPool = async ({
@@ -165,13 +161,48 @@ export const SwapTokenContextProvider = ({ children }) => {
       console.log(info);
 
       //ADD DATA
-      // const userStorageData = await connectingWithUserStorageContract();
+      const userStorageData = await connectingWithUserStorageContract();
 
-      // const userLiqudity = await userStorageData.addToBlockchain(
-      //   poolAddress,
-      //   tokenAddress0,
-      //   tokenAddress1
-      // );
+      const userLiqudity = await userStorageData.addToBlockchain(poolAddress, tokenAddress0, tokenAddress1);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const singleSwapToken = async ({ token1, token2, swapAmount }) => {
+    console.log(token1.tokenAddress.tokenAddress, token2.tokenAddress.tokenAddress, swapAmount);
+    try {
+      let singleSwapToken;
+      let weth;
+      let dai;
+      singleSwapToken = await connectingWithSingleSwapToken(signer);
+      weth = await connectingWithIWTHToken(signer);
+      dai = await connectingWithDAIToken(signer);
+
+      console.log(singleSwapToken);
+      const decimals0 = 18;
+      const inputAmount = swapAmount;
+      const amountIn = ethers.utils.parseUnits(inputAmount.toString(), decimals0);
+
+      await weth.deposit({ value: amountIn });
+      console.log(amountIn);
+      await weth.approve(singleSwapToken.address, amountIn);
+      //SWAP
+      const transaction = await singleSwapToken.swapExactInputSingle(
+        token1.tokenAddress.tokenAddress,
+        token2.tokenAddress.tokenAddress,
+        amountIn,
+        {
+          gasLimit: 300000,
+        },
+      );
+      await transaction.wait();
+      console.log(transaction);
+      const balance = await dai.balanceOf(account);
+      const transferAmount = BigNumber.from(balance).toString();
+      const ethValue = ethers.utils.formatEther(transferAmount);
+      setDai(ethValue);
+      console.log("DAI balance:", ethValue);
     } catch (error) {
       console.log(error);
     }
@@ -180,17 +211,14 @@ export const SwapTokenContextProvider = ({ children }) => {
   return (
     <SwapTokenContext.Provider
       value={{
-        // getPrice,
-        // swapUpdatePrice,
-        // createLiquidityAndPool,
+        getPrice,
+        swapUpdatePrice,
+        createLiquidityAndPool,
+        singleSwapToken,
         getAllLiquidity,
-        account,
         weth9,
         dai,
-        networkConnect,
-        ether,
         tokenData,
-        provider,
         topTokensList,
       }}
     >

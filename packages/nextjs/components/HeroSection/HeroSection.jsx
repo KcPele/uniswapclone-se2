@@ -21,11 +21,7 @@ const HeroSection = ({}) => {
   const [search, setSearch] = useState(false);
   const [swapAmount, setSwapAmount] = useState(0);
   const { address: account } = useAccount();
-  const {
-    tokenData,
-    // getPrice,
-    // swapUpdatePrice,
-  } = useContext(SwapTokenContext);
+  const { singleSwapToken, tokenData, getPrice, swapUpdatePrice } = useContext(SwapTokenContext);
 
   // const { writeAsync, isLoading } = useScaffoldContractWrite({
   //   contractName: "YourContract",
@@ -52,20 +48,24 @@ const HeroSection = ({}) => {
   });
 
   const callOutPut = async value => {
-    const yourAccount = "0x97f991971a37D4Ca58064e6a98FC563F03A71E5c";
-    const deadline = 10;
-    const slippageAmount = 25;
-    const data = await swapUpdatePrice(value, slippageAmount, deadline, yourAccount);
-    console.log(data);
+    try {
+      const yourAccount = account;
+      const deadline = 10;
+      const slippageAmount = 25;
+      const data = await swapUpdatePrice(value, slippageAmount, deadline, yourAccount, tokenOne, tokenTwo);
+      console.log(data);
 
-    setTokenSwapOutPut(data[1]);
-    setSearch(false);
+      setTokenSwapOutPut(data[1]);
+      setSearch(false);
 
-    const poolAddress = "0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8";
-    const poolData = await getPrice(value, poolAddress);
-    const message = `${value} ${poolData[2]} = ${poolData[0]} ${poolData[1]}`;
-    console.log(message);
-    setPoolMessage(message);
+      const poolAddress = "0xc2e9f25be6257c210d7adf0d4cd6e3e881ba25f8";
+      const poolData = await getPrice(value, poolAddress);
+      const message = `${value} ${poolData[2]} = ${poolData[0]} ${poolData[1]}`;
+      console.log(message);
+      setPoolMessage(message);
+    } catch (error) {
+      console.log(error);
+    }
   };
   //JSX
   return (

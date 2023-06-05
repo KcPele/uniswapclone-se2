@@ -31,17 +31,8 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
     autoMine: true,
   });
 
-  //swag token
-  await deploy("SwagToken", {
-    from: deployer,
-
-    args: [],
-    log: true,
-    autoMine: true,
-  });
-
-  //light token
-  await deploy("LightToken", {
+  //UserStorageData
+  await deploy("UserStorageData", {
     from: deployer,
 
     args: [],
